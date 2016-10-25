@@ -5,8 +5,6 @@ import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -25,7 +23,7 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
     @Override
     protected String doInBackground(Void... params) {
         try {
-            serverSocket = new ServerSocket(8388);
+            serverSocket = new ServerSocket(8288);
             Log.v("Server", "Server Socket is open");
             Socket socket = serverSocket.accept();
             Log.v("Server", "client is connected");

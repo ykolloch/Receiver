@@ -29,5 +29,5 @@
         android:layout_below="@+id/btnScan"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="33dp"
-        android:id="@+id/textView" />
+        android:id="@+id/tfConStatus" />
 </RelativeLayout>

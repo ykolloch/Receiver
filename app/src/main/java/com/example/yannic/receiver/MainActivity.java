@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener {
@@ -19,12 +20,13 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
+    private TextView tfConStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        tfConStatus = (TextView) findViewById(R.id.tfConStatus);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -83,8 +85,6 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
         if(info.groupFormed && info.isGroupOwner) {
-            Log.v("HELLO", "ITS ME");
-            Log.v("info", info.groupOwnerAddress.getHostAddress());
             new ServerTask().execute();
         }
     }
@@ -92,5 +92,13 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peers) {
 
+    }
+
+    public String getTfConStatus() {
+        return (String) tfConStatus.getText();
+    }
+
+    public void setTfConStatus(String tfConStatus) {
+        this.tfConStatus.setText(tfConStatus);
     }
 }

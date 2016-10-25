@@ -47,9 +47,11 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
                 if (networkInfo.isConnected()) {
                     Log.v("", "isConnected");
+                    mainActivity.setTfConStatus("Connected");
                     wifiP2pManager.requestConnectionInfo(channel, mainActivity);
                 } else {
                     //@TODO reset Date again?
+                    mainActivity.setTfConStatus("Not Connected");
                 }
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
