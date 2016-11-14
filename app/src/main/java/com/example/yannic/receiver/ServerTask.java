@@ -1,6 +1,8 @@
 package com.example.yannic.receiver;
 
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import java.io.DataInputStream;
@@ -15,9 +17,10 @@ import java.net.Socket;
 public class ServerTask extends AsyncTask<Void, Void, String> {
 
     ServerSocket serverSocket;
+    Handler handler;
 
-    public ServerTask() {
-
+    public ServerTask(Handler handler) {
+        this.handler = handler;
     }
 
     @Override
@@ -33,15 +36,20 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
                 byte messageType = dataInputStream.readByte();
 
                 switch (messageType) {
-                    case 1:
-                        Log.v("SERVER", dataInputStream.readUTF());
                     default:
+                        Log.v("SERVER", dataInputStream.readUTF());
+                        break;
+                    case -1:
                         done = true;
+                        break;
                 }
             }
             dataInputStream.close();
             socket.close();
             serverSocket.close();
+            Message message = new Message();
+            handler.sendMessage(message);
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -53,5 +61,10 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
             }
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(String s) {
+        super.onPostExecute(s);
     }
 }

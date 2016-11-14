@@ -7,8 +7,10 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +23,12 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
     private TextView tfConStatus;
+    private Handler handler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
         if(info.groupFormed && info.isGroupOwner) {
-            new ServerTask().execute();
+            new ServerTask(handler).execute();
         }
     }
 
