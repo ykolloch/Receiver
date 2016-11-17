@@ -10,10 +10,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener {
 
@@ -29,12 +35,21 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
             super.handleMessage(msg);
         }
     };
+    private ArrayList<String> incDataList = new ArrayList<>();
+
+    private ListView listViewIncData;
+    private ArrayAdapter<String> adapter;
+    private Button btnDisco;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         tfConStatus = (TextView) findViewById(R.id.tfConStatus);
+        listViewIncData = (ListView) findViewById(R.id.listViewIncData);
+        btnDisco = (Button) findViewById(R.id.btnDisco);
+
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
@@ -60,6 +75,30 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
                         Toast.makeText(MainActivity.this, "Failed Searching", Toast.LENGTH_LONG).show();
                     }
                 });
+            }
+        });
+
+        adapter = new CustomAdapter(this, incDataList);
+        listViewIncData.setAdapter(adapter);
+
+        btnDisco.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconnect();
+            }
+        });
+    }
+
+    private void disconnect() {
+        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                //@TODO close all and reset;
+            }
+
+            @Override
+            public void onFailure(int reason) {
+
             }
         });
     }
@@ -93,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
         if(info.groupFormed && info.isGroupOwner) {
-            new ServerTask(handler).execute();
+            new ServerTask(handler, this).execute();
         }
     }
 
@@ -109,4 +148,16 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     public void setTfConStatus(String tfConStatus) {
         this.tfConStatus.setText(tfConStatus);
     }
+
+    public void addIncData(String s) {
+        incDataList.add(s);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+
 }

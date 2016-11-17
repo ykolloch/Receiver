@@ -8,18 +8,19 @@ import java.io.Serializable;
 
 public class NMEA implements Serializable {
 
-    private String name;
+    private String lat;
+    private String log;
 
-    public NMEA(String name) {
-        this.name = name;
+    public NMEA(String lat, String log) {
+        this.lat = lat;
+        this.log = log;
     }
 
-
-    public String getName() {
-        return name;
+    public String getLat() {
+        return lat;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getLog() {
+        return log;
     }
 }

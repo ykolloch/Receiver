@@ -16,11 +16,13 @@ import java.net.Socket;
 
 public class ServerTask extends AsyncTask<Void, Void, String> {
 
-    ServerSocket serverSocket;
-    Handler handler;
+    private ServerSocket serverSocket;
+    private final Handler handler;
+    private final MainActivity mainActivity;
 
-    public ServerTask(Handler handler) {
+    public ServerTask(Handler handler, MainActivity mainActivity) {
         this.handler = handler;
+        this.mainActivity = mainActivity;
     }
 
     @Override
@@ -37,7 +39,9 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
 
                 switch (messageType) {
                     default:
-                        Log.v("SERVER", dataInputStream.readUTF());
+                        String s = dataInputStream.readUTF();
+                        Log.v("SERVER", s);
+                        mainActivity.addIncData(s);
                         break;
                     case -1:
                         done = true;
