@@ -1,16 +1,20 @@
 package com.example.yannic.receiver;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.UiThread;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -41,10 +45,16 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private ArrayAdapter<String> adapter;
     private Button btnDisco;
 
+    private static final String[] GPS_PERMS = {Manifest.permission.ACCESS_FINE_LOCATION};
+    private static final int PERM_CODE = 1337;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        requestPermissions(GPS_PERMS, PERM_CODE);
 
         tfConStatus = (TextView) findViewById(R.id.tfConStatus);
         listViewIncData = (ListView) findViewById(R.id.listViewIncData);
@@ -60,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         findViewById(R.id.btnScan).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!isWifiEnabled()) {
+                if (!isWifiEnabled()) {
                     //@TODO
                     return;
                 }
@@ -131,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
-        if(info.groupFormed && info.isGroupOwner) {
+        if (info.groupFormed && info.isGroupOwner) {
             new ServerTask(handler, this).execute();
         }
     }
@@ -159,5 +169,22 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERM_CODE:
+                if(canAccessLocation()) {
+                    new Positionsabgleich(this, this);
+                }
+                break;
+            default:
+                break;
+        }
+    }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private boolean canAccessLocation() {
+        return PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
 }
