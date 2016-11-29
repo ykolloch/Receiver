@@ -19,6 +19,7 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
     private ServerSocket serverSocket;
     private final Handler handler;
     private final MainActivity mainActivity;
+    private final String LOG_TAG = this.getClass().toString();
 
     public ServerTask(Handler handler, MainActivity mainActivity) {
         this.handler = handler;
@@ -40,7 +41,10 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
                 switch (messageType) {
                     default:
                         String s = dataInputStream.readUTF();
-                        Log.v("SERVER", s);
+                        //Log.v("SERVER", s);
+                        NMEA nmea = new NMEA(s);
+                        Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
+                        Log.v(LOG_TAG, String.valueOf(d));
                         mainActivity.addIncData(s);
                         break;
                     case -1:
