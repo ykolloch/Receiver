@@ -1,4 +1,4 @@
-package com.example.yannic.receiver;
+package com.example.yannic.receiver.gnss;
 
 import android.util.Log;
 

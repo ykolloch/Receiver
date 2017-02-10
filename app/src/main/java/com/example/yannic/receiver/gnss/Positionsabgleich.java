@@ -1,4 +1,4 @@
-package com.example.yannic.receiver;
+package com.example.yannic.receiver.gnss;
 
 import android.Manifest;
 import android.content.Context;
@@ -8,7 +8,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
+
+import com.example.yannic.receiver.MainActivity;
 
 /**
  * Created by Yannic on 29.11.2016.
@@ -88,7 +89,7 @@ public class Positionsabgleich {
         @Override
         public void onLocationChanged(Location location) {
             setLocation(location);
-            Log.v(LOG_TAG, "LocationChanged");
+            //Log.v(LOG_TAG, "LocationChanged");
         }
 
         @Override

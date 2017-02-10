@@ -10,47 +10,49 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.yannic.receiver.MainActivity">
 
-    <Button
-        android:text="SCAN"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="14dp"
-        android:id="@+id/btnScan"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
 
-    <Button
-        android:text="Disconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnScan"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/btnDisco"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
-
-    <TextView
-        android:text="TextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnDisco"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:id="@+id/tfConStatus" />
-
-    <ListView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tfConStatus"
-        android:layout_marginTop="20dp"
+        android:weightSum="1"
+        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:id="@+id/listViewIncData"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:transcriptMode="alwaysScroll"/>
+        android:layout_alignParentStart="true">
+
+        <TextView
+            android:text="TextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tfConStatus"
+            android:layout_weight="0.23"
+            android:textAlignment="center" />
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="333dp"
+            android:layout_weight="0.59"
+            android:id="@+id/listViewIncData" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="59dp">
+
+            <Button
+                android:text="Start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnStart"
+                android:layout_weight="1" />
+
+            <Button
+                android:text="Disconnect"
+                android:layout_width="173dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnDisco" />
+        </LinearLayout>
+
+    </LinearLayout>
+
 </RelativeLayout>

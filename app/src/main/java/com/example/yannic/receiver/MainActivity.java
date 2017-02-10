@@ -5,9 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,12 +18,18 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.example.yannic.receiver.gnss.Positionsabgleich;
+import com.example.yannic.receiver.util.CustomAdapter;
+import com.example.yannic.receiver.wifi.SearchTask;
+import com.example.yannic.receiver.wifi.ServerTask;
+import com.example.yannic.receiver.wifi.WifiDirectBroadcastReceiver;
 
 import java.util.ArrayList;
 
@@ -39,14 +47,23 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
             super.handleMessage(msg);
         }
     };
-    private ArrayList<String> incDataList = new ArrayList<>();
+    private ArrayList<WifiP2pDevice> incDataList = new ArrayList<WifiP2pDevice>();
 
     private ListView listViewIncData;
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<WifiP2pDevice> adapter;
     private Button btnDisco;
+    private Button btnStart;
 
     private static final String[] GPS_PERMS = {Manifest.permission.ACCESS_FINE_LOCATION};
     private static final int PERM_CODE = 1337;
+
+    private SearchTask searchTask;
+    private WifiP2pDeviceList p2pDeviceList;
+
+    /**
+     * used to change the icons in the listview.
+     */
+    private ArrayList<WifiP2pDevice> connectedDevices = new ArrayList<>();
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -59,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         tfConStatus = (TextView) findViewById(R.id.tfConStatus);
         listViewIncData = (ListView) findViewById(R.id.listViewIncData);
         btnDisco = (Button) findViewById(R.id.btnDisco);
+        btnStart = (Button) findViewById(R.id.btnStart);
+
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -67,27 +86,6 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
 
-        findViewById(R.id.btnScan).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isWifiEnabled()) {
-                    //@TODO
-                    return;
-                }
-                manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "Searching", Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-                        Toast.makeText(MainActivity.this, "Failed Searching", Toast.LENGTH_LONG).show();
-                    }
-                });
-            }
-        });
-
         adapter = new CustomAdapter(this, incDataList);
         listViewIncData.setAdapter(adapter);
 
@@ -95,6 +93,18 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
             @Override
             public void onClick(View v) {
                 disconnect();
+            }
+        });
+
+        ServerTask serverTask = new ServerTask(this);
+        serverTask.execute();
+
+        btnStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (searchTask != null) {
+                    searchTask.cancel(true);
+                }
             }
         });
     }
@@ -142,13 +152,17 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
         if (info.groupFormed && info.isGroupOwner) {
-            new ServerTask(handler, this).execute();
+            new ServerTask(this).execute();
         }
     }
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peers) {
-
+        Log.v("peers", peers.toString());
+        this.incDataList.clear();
+        this.incDataList.addAll(peers.getDeviceList());
+        this.p2pDeviceList = peers;
+        adapter.notifyDataSetChanged();
     }
 
     public String getTfConStatus() {
@@ -159,22 +173,13 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         this.tfConStatus.setText(tfConStatus);
     }
 
-    public void addIncData(String s) {
-        incDataList.add(s);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                adapter.notifyDataSetChanged();
-            }
-        });
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case PERM_CODE:
-                if(canAccessLocation()) {
+                if (canAccessLocation()) {
                     new Positionsabgleich(this, this);
                 }
                 break;
@@ -186,5 +191,13 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     @RequiresApi(api = Build.VERSION_CODES.M)
     private boolean canAccessLocation() {
         return PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
+
+    public void startSearchTask() {
+        searchTask = new SearchTask(manager, channel, this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            searchTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        else
+            searchTask.execute();
     }
 }

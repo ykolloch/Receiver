@@ -1,9 +1,11 @@
-package com.example.yannic.receiver;
+package com.example.yannic.receiver.wifi;
 
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import com.example.yannic.receiver.MainActivity;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -17,12 +19,12 @@ import java.net.Socket;
 public class ServerTask extends AsyncTask<Void, Void, String> {
 
     private ServerSocket serverSocket;
-    private final Handler handler;
+    //private final Handler handler;
     private final MainActivity mainActivity;
     private final String LOG_TAG = this.getClass().toString();
 
-    public ServerTask(Handler handler, MainActivity mainActivity) {
-        this.handler = handler;
+    public ServerTask(MainActivity mainActivity) {
+        //this.handler = handler;
         this.mainActivity = mainActivity;
     }
 
@@ -42,10 +44,10 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
                     default:
                         String s = dataInputStream.readUTF();
                         //Log.v("SERVER", s);
-                        NMEA nmea = new NMEA(s);
-                        Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
-                        Log.v(LOG_TAG, String.valueOf(d));
-                        mainActivity.addIncData(s);
+                        //NMEA nmea = new NMEA(s);
+                        //Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
+                        Log.v(LOG_TAG, String.valueOf(s));
+                        //mainActivity.addIncData(s);
                         break;
                     case -1:
                         done = true;
@@ -56,7 +58,7 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
             socket.close();
             serverSocket.close();
             Message message = new Message();
-            handler.sendMessage(message);
+            //handler.sendMessage(message);
 
         } catch (IOException e) {
             e.printStackTrace();
