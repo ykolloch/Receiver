@@ -27,7 +27,6 @@ public class NMEA implements Serializable {
         for (int i = 0; i < parts.length; i++) {
             strings.add(i, parts[i]);
         }
-        Log.v(LOG_TAG, String.valueOf(strings));
     }
 
     public double getLongitude() {

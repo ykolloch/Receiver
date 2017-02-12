@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -20,8 +21,10 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowId;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,6 +35,7 @@ import com.example.yannic.receiver.wifi.ServerTask;
 import com.example.yannic.receiver.wifi.WifiDirectBroadcastReceiver;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener {
 
@@ -41,29 +45,19 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver = null;
     private TextView tfConStatus;
-    private Handler handler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-        }
-    };
     private ArrayList<WifiP2pDevice> incDataList = new ArrayList<WifiP2pDevice>();
-
     private ListView listViewIncData;
     private ArrayAdapter<WifiP2pDevice> adapter;
     private Button btnDisco;
     private Button btnStart;
-
     private static final String[] GPS_PERMS = {Manifest.permission.ACCESS_FINE_LOCATION};
     private static final int PERM_CODE = 1337;
-
     private SearchTask searchTask;
     private WifiP2pDeviceList p2pDeviceList;
+    private static ImageView imageGPS;
 
-    /**
-     * used to change the icons in the listview.
-     */
-    private ArrayList<WifiP2pDevice> connectedDevices = new ArrayList<>();
+    private static ArrayList<String> rangeDiffernce = new ArrayList<>();
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -77,7 +71,9 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         listViewIncData = (ListView) findViewById(R.id.listViewIncData);
         btnDisco = (Button) findViewById(R.id.btnDisco);
         btnStart = (Button) findViewById(R.id.btnStart);
+        imageGPS = (ImageView) findViewById(R.id.imageGPS);
 
+        imageGPS.setImageResource(R.drawable.ic_location_disabled_black_24dp);
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -103,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
             @Override
             public void onClick(View v) {
                 if (searchTask != null) {
+                    toggleStartButton(false);
+                    CustomAdapter.startStarted();
                     searchTask.cancel(true);
                 }
             }
@@ -113,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                //@TODO close all and reset;
+                reset();
             }
 
             @Override
@@ -121,6 +119,15 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
             }
         });
+    }
+
+    /**
+     * reset all data after disconnect.
+     */
+    private void reset() {
+        this.toggleStartButton(true);
+        CustomAdapter.reset();
+        rangeDiffernce.clear();
     }
 
     @Override
@@ -188,16 +195,54 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         }
     }
 
+    /**
+     * changes the icon top right if own gps position can be tract.
+     */
+    public static void locationWorking() {
+        imageGPS.setImageResource(R.drawable.ic_location_searching_black_24dp);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     private boolean canAccessLocation() {
         return PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
     }
 
+    /**
+     * starts the search async task to search for other wifi direct devices.
+     * used from the broadcastreceiver.
+     */
     public void startSearchTask() {
         searchTask = new SearchTask(manager, channel, this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
             searchTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         else
             searchTask.execute();
+    }
+
+    /**
+     * enables the start button if needed and disables when position tracking started.
+     *
+     * @param b
+     */
+    private void toggleStartButton(Boolean b) {
+        btnStart.setEnabled(b);
+        adapter.notifyDataSetChanged();
+    }
+
+    /**
+     * @param s
+     */
+    public void rangeDiffernce(int device, String s) {
+        rangeDiffernce.add(device, s);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    public static ArrayList<String> getRangeDiff() {
+        return (rangeDiffernce.size() > 0) ? rangeDiffernce : null;
     }
 }
