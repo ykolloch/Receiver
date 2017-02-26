@@ -1,11 +1,12 @@
 package com.example.yannic.receiver;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.media.Image;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -13,19 +14,18 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowId;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.yannic.receiver.gnss.Positionsabgleich;
@@ -34,10 +34,11 @@ import com.example.yannic.receiver.wifi.SearchTask;
 import com.example.yannic.receiver.wifi.ServerTask;
 import com.example.yannic.receiver.wifi.WifiDirectBroadcastReceiver;
 
-import java.util.ArrayList;
-import java.util.Map;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 
-public class MainActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener {
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity implements WifiP2pManager.ChannelListener, WifiP2pManager.ConnectionInfoListener, WifiP2pManager.PeerListListener, OnSeekBarChangeListener {
 
     private boolean isWifiEnabled = false;
     private final IntentFilter intentFilter = new IntentFilter();
@@ -55,8 +56,17 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     private SearchTask searchTask;
     private WifiP2pDeviceList p2pDeviceList;
     private static ImageView imageGPS;
+    private SeekBar seekBar;
+    private TextView tfRange;
+    public static int MAX_RANGE = 20;
+    private  int x = 0;
+    private NotificationCompat.Builder builder;
+    private static final int unuqieID = 231232;
+
+    private Vibrator vibrator;
 
     private static ArrayList<String> rangeDiffernce = new ArrayList<>();
+    private int[] rangeArray = {5, 20, 40, 60};
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -72,8 +82,12 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         btnDisco = (Button) findViewById(R.id.btnDisco);
         btnStart = (Button) findViewById(R.id.btnStart);
         imageGPS = (ImageView) findViewById(R.id.imageGPS);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        tfRange = (TextView) findViewById(R.id.tfRange);
 
         imageGPS.setImageResource(R.drawable.ic_location_disabled_black_24dp);
+        seekBar.setOnSeekBarChangeListener(this);
+        seekBar.setMax(3);
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -105,6 +119,11 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
                 }
             }
         });
+
+        builder = new NotificationCompat.Builder(this);
+        builder.setAutoCancel(true);
+
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     private void disconnect() {
@@ -172,10 +191,6 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         adapter.notifyDataSetChanged();
     }
 
-    public String getTfConStatus() {
-        return (String) tfConStatus.getText();
-    }
-
     public void setTfConStatus(String tfConStatus) {
         this.tfConStatus.setText(tfConStatus);
     }
@@ -232,17 +247,56 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     /**
      * @param s
      */
-    public void rangeDiffernce(int device, String s) {
+    public void rangeDiffernce(int device, String s, final boolean b) {
         rangeDiffernce.add(device, s);
+        vibrator.vibrate(10);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 adapter.notifyDataSetChanged();
+                if(!b)
+                    CustomAdapter.outOfRangeTrigger(true);
+                else
+                    CustomAdapter.outOfRangeTrigger(false);
             }
         });
     }
 
     public static ArrayList<String> getRangeDiff() {
         return (rangeDiffernce.size() > 0) ? rangeDiffernce : null;
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser) {
+            int range = rangeArray[progress];
+            tfRange.setText("Range: " + String.valueOf(range));
+            MAX_RANGE = range;
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    /**
+     * @TODO maybe later
+     * @param device_name
+     */
+    private void makeNotification(String device_name) {
+        builder.setSmallIcon(R.drawable.ic_alarm_black_24dp);
+        builder.setTicker("");
+        builder.setWhen(System.currentTimeMillis());
+        builder.setContentTitle(device_name);
+        builder.setContentText("is out of range!");
+
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }

@@ -30,6 +30,8 @@ public class CustomAdapter extends ArrayAdapter<WifiP2pDevice> {
 
 
     private static Boolean started = false;
+    private static Boolean outOfRange = false;
+    private int x = 0;
 
     public CustomAdapter(Context context, List<WifiP2pDevice> wifiP2pDeviceList) {
         super(context, R.layout.row_data, wifiP2pDeviceList);
@@ -55,14 +57,24 @@ public class CustomAdapter extends ArrayAdapter<WifiP2pDevice> {
         tfdeviceName.setText(deviceName);
         tfDistance.setText(distance);
 
-        if (getItem(position).status == 0) {
-            if (started) {
-                imageView.setImageResource(R.drawable.ic_room_black_24dp);
+        if(outOfRange) {
+            if(x == 0) {
+                imageView.setImageResource(R.drawable.ic_alarm_black_24dp);
+                x = 1;
             } else {
-                imageView.setImageResource(R.drawable.ic_done_black_24dp);
+                imageView.setImageResource(R.drawable.ic_alarm_white_24dp);
+                x = 0;
             }
         } else {
-            imageView.setImageResource(R.drawable.ic_visibility_black_24dp);
+            if (getItem(position).status == 0) {
+                if (started) {
+                    imageView.setImageResource(R.drawable.ic_room_black_24dp);
+                } else {
+                    imageView.setImageResource(R.drawable.ic_done_black_24dp);
+                }
+            } else {
+                imageView.setImageResource(R.drawable.ic_visibility_black_24dp);
+            }
         }
         return view;
     }
@@ -71,7 +83,12 @@ public class CustomAdapter extends ArrayAdapter<WifiP2pDevice> {
         started = true;
     }
 
+    public static void outOfRangeTrigger(boolean b) {
+        outOfRange = b;
+    }
+
     public static void reset() {
         started = false;
+        outOfRange = false;
     }
 }

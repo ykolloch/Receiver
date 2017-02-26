@@ -50,10 +50,11 @@ public class Positionsabgleich {
 
     /**
      * checks the receiving Position with own Position and return the range between both devices.
+     *
      * @return meters between devices.
      */
     public double getRangeDiffernce(final NMEA nmea) {
-        if(location == null) return 0;
+        if (location == null) return 0;
         double lat1 = nmea.getLatitude();
         double lon1 = nmea.getLongitude();
         double lat2 = location.getLatitude();
@@ -62,12 +63,24 @@ public class Positionsabgleich {
         double R = 6378.137; // Radius of earth in KM
         double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
         double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
-        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double d = R * c;
         return d * 1000; // meters
+    }
+
+    /**
+     * checks if the calculated difference is larger than the max_range.
+     * @param difference
+     * @return
+     */
+    public boolean inRange(double difference) {
+        if(difference > MainActivity.MAX_RANGE) {
+            return false;
+        }
+        return true;
     }
 
     public Location getLocation() {
@@ -79,7 +92,7 @@ public class Positionsabgleich {
     }
 
     public static Positionsabgleich getReference() {
-        if(self != null) {
+        if (self != null) {
             return self;
         }
         return null;

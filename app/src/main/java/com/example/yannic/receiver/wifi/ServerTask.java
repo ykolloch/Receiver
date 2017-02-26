@@ -47,7 +47,7 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
                         String s = dataInputStream.readUTF();
                         NMEA nmea = new NMEA(s);
                         Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
-                        mainActivity.rangeDiffernce(0, d.toString());
+                        mainActivity.rangeDiffernce(0, d.toString(), Positionsabgleich.getReference().inRange(d));
                         break;
                     case -1:
                         done = true;
