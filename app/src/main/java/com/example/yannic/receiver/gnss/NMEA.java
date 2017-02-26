@@ -29,6 +29,17 @@ public class NMEA implements Serializable {
         }
     }
 
+    public NMEA() {
+
+    }
+
+    public void setData(final String string) {
+        String[] parts = string.split(Pattern.quote(","));
+        for (int i = 0; i < parts.length; i++) {
+            strings.add(i, parts[i]);
+        }
+    }
+
     public double getLongitude() {
         if(strings != null) {
             return makeCordNormal(Double.parseDouble(strings.get(4)));

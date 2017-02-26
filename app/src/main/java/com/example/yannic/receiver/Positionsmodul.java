@@ -2,6 +2,13 @@ package com.example.yannic.receiver;
 
 import android.location.Location;
 
+import com.example.yannic.receiver.gnss.NMEA;
+import com.example.yannic.receiver.gnss.Positionsabgleich;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.Socket;
+
 /**
  * Created by Yannic on 26.02.2017.
  */
@@ -9,19 +16,22 @@ import android.location.Location;
 public class Positionsmodul {
 
     private String name;
-    private Location location;
+    private Socket socket;
+    private DataInputStream dataInputStream;
+    private Boolean active = false;
+    private NMEA nmea;
+    private MainActivity mainActivity;
 
-    public Positionsmodul(final String name) {
+    public Positionsmodul(final String name, final MainActivity mainActivity) {
         this.name = name;
+        this.mainActivity = mainActivity;
+        this.nmea = new NMEA();
     }
 
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
+    public void processData(final String string) {
+        nmea.setData(string);
+        Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
+        mainActivity.rangeDiffernce(0, d.toString(), Positionsabgleich.getReference().inRange(d));
     }
 
     public String getName() {
@@ -30,5 +40,27 @@ public class Positionsmodul {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public DataInputStream getDataInputStream() {
+        return dataInputStream;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
+        try {
+            dataInputStream = new DataInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        active = true;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

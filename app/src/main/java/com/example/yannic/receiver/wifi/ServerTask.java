@@ -6,6 +6,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.example.yannic.receiver.MainActivity;
+import com.example.yannic.receiver.Positionsmodul;
 import com.example.yannic.receiver.gnss.NMEA;
 import com.example.yannic.receiver.gnss.Positionsabgleich;
 
@@ -25,6 +26,8 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
     private ServerSocket serverSocket;
     private final MainActivity mainActivity;
     private final String LOG_TAG = this.getClass().toString();
+    private int devices = 0;
+    private ArrayList<Positionsmodul> positionsmoduls = new ArrayList<>();
 
     public ServerTask(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -34,35 +37,40 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
     protected String doInBackground(Void... params) {
         try {
             serverSocket = new ServerSocket(8288);
-            Log.v("Server", "Server Socket is open");
-            Socket socket = serverSocket.accept();
-            Log.v("Server", "client is connected");
-            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            Log.v(LOG_TAG, "Server Socket is open");
+
+            /**
+             * create new Positionsmodul obj for each connected Devices.
+             */
+            for (int i = 0; i < devices; i++) {
+                Positionsmodul positionsmodul = new Positionsmodul(String.valueOf(i), mainActivity);
+                positionsmodul.setSocket(serverSocket.accept());
+                positionsmoduls.add(positionsmodul);
+                Log.v(LOG_TAG, "Client is connected");
+            }
+
             boolean done = false;
             while (!done) {
-                byte messageType = dataInputStream.readByte();
-
-                switch (messageType) {
-                    default:
-                        String s = dataInputStream.readUTF();
-                        NMEA nmea = new NMEA(s);
-                        Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
-                        mainActivity.rangeDiffernce(0, d.toString(), Positionsabgleich.getReference().inRange(d));
-                        break;
-                    case -1:
-                        done = true;
-                        break;
+                for (int i = 0; i < positionsmoduls.size(); i++) {
+                    Positionsmodul pos = positionsmoduls.get(i);
+                    byte messageType = pos.getDataInputStream().readByte();
+                    switch (messageType) {
+                        default:
+                            pos.processData(pos.getDataInputStream().readUTF());
+                            break;
+                        case -1:
+                            pos.setActive(false);
+                            break;
+                    }
                 }
             }
-            dataInputStream.close();
-            socket.close();
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
                 serverSocket.close();
-                Log.v("Server", "serversocket closed");
+                Log.v(LOG_TAG, "Server Socket closed");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -75,4 +83,7 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
         super.onPostExecute(s);
     }
 
+    public void setDevices(final int devices) {
+        this.devices = devices;
+    }
 }
