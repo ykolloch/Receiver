@@ -1,4 +1,4 @@
-package com.example.yannic.receiver;
+package com.example.yannic.receiver.wifi;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
+
+import com.example.yannic.receiver.MainActivity;
 
 /**
  * Created by Yannic on 25.10.2016.
@@ -48,9 +50,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 if (networkInfo.isConnected()) {
                     Log.v("", "isConnected");
                     mainActivity.setTfConStatus("Connected");
+
                     wifiP2pManager.requestConnectionInfo(channel, mainActivity);
                 } else {
-                    //@TODO reset Date again?
+                    mainActivity.startSearchTask();
                     mainActivity.setTfConStatus("Not Connected");
                 }
             }
