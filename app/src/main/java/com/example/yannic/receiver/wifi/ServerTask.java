@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 /**
  * Created by Yannic on 25.10.2016.
@@ -26,8 +27,10 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
     private ServerSocket serverSocket;
     private final MainActivity mainActivity;
     private final String LOG_TAG = this.getClass().toString();
-    private int devices = 0;
+    private int devices = 1;
     private ArrayList<Positionsmodul> positionsmoduls = new ArrayList<>();
+    private boolean message_end = false;
+    private String rec_message = "";
 
     public ServerTask(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -56,7 +59,30 @@ public class ServerTask extends AsyncTask<Void, Void, String> {
                     byte messageType = pos.getDataInputStream().readByte();
                     switch (messageType) {
                         default:
-                            pos.processData(pos.getDataInputStream().readUTF());
+                            while (!message_end) {
+                                byte[] b = new byte[1];
+                                pos.getDataInputStream().read(b);
+                                String cha = new String(b);
+                                if (cha.equals("$")) {
+                                    if (rec_message.length() > 33) {
+                                        if (rec_message.substring(33, 34).equals("*") || !rec_message.substring(0, 5).equals("GPGGA")) {
+                                            Log.v(LOG_TAG, "no GPS Data");
+                                            pos.processData(devices - 1, rec_message, false);
+                                        } else {
+                                            Log.v(LOG_TAG, rec_message);
+                                            rec_message = rec_message.substring(0, 63);
+                                            pos.processData(devices - 1, rec_message, true);
+                                        }
+                                        rec_message = "";
+                                    }
+                                } else {
+                                    if (!cha.equals("\n")) {
+                                        rec_message = rec_message.concat(cha);
+                                    }
+                                }
+                            }
+                            //pos.processData(pos.getDataInputStream().readUTF());
+                            message_end = false;
                             break;
                         case -1:
                             pos.setActive(false);

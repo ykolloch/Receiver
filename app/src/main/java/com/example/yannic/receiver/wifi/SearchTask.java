@@ -39,7 +39,7 @@ public class SearchTask extends AsyncTask<Void, Void, String> {
 
                 @Override
                 public void onFailure(int reason) {
-                    Toast.makeText(mainActivity, "Failing ti search for devices", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(mainActivity, "Failing ti search for devices", Toast.LENGTH_LONG).show();
                 }
             });
             try {

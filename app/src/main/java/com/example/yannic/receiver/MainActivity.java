@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
 
         imageGPS.setImageResource(R.drawable.ic_location_disabled_black_24dp);
         seekBar.setOnSeekBarChangeListener(this);
+        seekBar.setProgress(0);
         seekBar.setMax(3);
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -249,7 +250,9 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
      */
     public void rangeDiffernce(int device, String s, final boolean b) {
         rangeDiffernce.add(device, s);
-        vibrator.vibrate(10);
+        if(!b)
+            vibrator.vibrate(100);
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -262,17 +265,19 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
         });
     }
 
+    /**
+     *
+     * @return
+     */
     public static ArrayList<String> getRangeDiff() {
         return (rangeDiffernce.size() > 0) ? rangeDiffernce : null;
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser) {
-            int range = rangeArray[progress];
-            tfRange.setText("Range: " + String.valueOf(range));
-            MAX_RANGE = range;
-        }
+        int range = rangeArray[progress];
+        tfRange.setText("Range: " + String.valueOf(range));
+        MAX_RANGE = range;
     }
 
     @Override
@@ -286,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements WifiP2pManager.Ch
     }
 
     /**
-     * @TODO maybe later
+     * @TODO Not Implemented
      * @param device_name
      */
     private void makeNotification(String device_name) {

@@ -83,6 +83,10 @@ public class CustomAdapter extends ArrayAdapter<WifiP2pDevice> {
         started = true;
     }
 
+    /**
+     *
+     * @param b
+     */
     public static void outOfRangeTrigger(boolean b) {
         outOfRange = b;
     }

@@ -28,10 +28,18 @@ public class Positionsmodul {
         this.nmea = new NMEA();
     }
 
-    public void processData(final String string) {
+    /**
+     * processes the NMEA Data
+     * @param string
+     * @param realData
+     */
+    public void processData(final int device, final String string, final boolean realData) {
+        if(!realData) {
+            return;
+        }
         nmea.setData(string);
         Double d = Positionsabgleich.getReference().getRangeDiffernce(nmea);
-        mainActivity.rangeDiffernce(0, d.toString(), Positionsabgleich.getReference().inRange(d));
+        mainActivity.rangeDiffernce(device, d.toString(), Positionsabgleich.getReference().inRange(d));
     }
 
     public String getName() {
@@ -44,10 +52,6 @@ public class Positionsmodul {
 
     public DataInputStream getDataInputStream() {
         return dataInputStream;
-    }
-
-    public Socket getSocket() {
-        return socket;
     }
 
     public void setSocket(Socket socket) {

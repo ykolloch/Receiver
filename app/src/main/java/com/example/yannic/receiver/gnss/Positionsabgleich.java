@@ -83,10 +83,6 @@ public class Positionsabgleich {
         return true;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
     public void setLocation(Location location) {
         this.location = location;
     }
